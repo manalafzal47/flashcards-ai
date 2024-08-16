@@ -2,10 +2,16 @@
 
 import React from "react";
 import getStripe from "@/utils/get-stripe";
-import Clerk from "./auth/[...auth]";
+import { useRouter } from "next/navigation";
 import { Typography, Box, Button, Grid, Card, CardContent, CardActions } from "@mui/material";
 
+
 export default function Home() {
+  const router = useRouter();
+
+  const handleAuthentication = () =>{
+    router.push('/auth');
+  };
   return (
     <>
       <Box sx={{ textAlign: "center", my: 4 }}>
@@ -15,17 +21,6 @@ export default function Home() {
         <Typography variant="h5" component="h2" gutterBottom>
           The easiest way to create flashcards from your text.
         </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{ mt: 2, mr: 2 }}
-          href="/generate"
-        >
-          Get Started
-        </Button>
-        <Button variant="outlined" color="primary" sx={{ mt: 2 }}>
-          Learn More
-        </Button>
       </Box>
 
       <Box sx={{ my: 6 }}>
@@ -95,7 +90,7 @@ export default function Home() {
                 </Typography>
               </CardContent>
               <CardActions>
-                <Button size="small" variant="contained">
+                <Button size="small" variant="contained" onClick={handleAuthentication}>
                   Sign Up
                 </Button>
               </CardActions>
