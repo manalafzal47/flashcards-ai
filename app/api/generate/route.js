@@ -43,9 +43,3 @@ export async function  POST(req){
         ],
         model : "gpt-4o-mini",
         respone_format: {type : 'json_object'}
-    })
-
-    const flashcards = JSON.parse(completion.choices[0].message.content)
-
-    return NextResponse.json(flashcards.flashcard)
-}
