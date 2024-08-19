@@ -35,6 +35,7 @@ export async function POST(req) {
   try {
     const data = await req.text();
 
+
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini", 
       messages: [systemPrompt, { role: "user", content: data }],
@@ -51,3 +52,4 @@ export async function POST(req) {
     );
   }
 }
+
