@@ -1,24 +1,43 @@
 "use client";
 
 import { useState } from "react";
-import { Container, TextField, Button, Typography, Box, Grid, Card, CardContent, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from "@mui/material";
+import {
+  Container,
+  TextField,
+  Button,
+  Typography,
+  Box,
+  Grid,
+  Card,
+  CardContent,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+} from "@mui/material";
 import Navbar from "../components/navbar";
 
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 
-import { collection, setDoc, doc, getDoc, writeBatch } from "firebase/firestore";
-import {db} from "../firebase/config";
+import {
+  collection,
+  setDoc,
+  doc,
+  getDoc,
+  writeBatch,
+} from "firebase/firestore";
+import { db } from "../firebase/config";
 
 export default function Generate() {
   const { isLoaded, isSignedIn, user } = useUser();
 
   const [flashcards, setFlashcards] = useState([]);
-  const [flipped, setFlipped] = useState([]);
+  const [flipped, setFlipped] = useState([]); // Array to track flipped states
   const [text, setText] = useState("");
   const [setName, setSetName] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [open, setOpen] = useState(false);
 
   const router = useRouter();
 
@@ -40,13 +59,22 @@ export default function Generate() {
 
       const data = await response.json();
       setFlashcards(data);
+      setFlipped(Array(data.length).fill(false)); // Initialize flipped states
     } catch (error) {
       console.error("Error generating flashcards:", error);
       alert("An error occurred while generating flashcards. Please try again.");
     }
   };
+
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
+
+  // Flip card on click
+  const handleFlip = (index) => {
+    const newFlipped = [...flipped];
+    newFlipped[index] = !newFlipped[index];
+    setFlipped(newFlipped);
+  };
 
   // Saving flashcards to firebase
   const saveFlashcards = async () => {
@@ -122,14 +150,62 @@ export default function Generate() {
             <Grid container spacing={2}>
               {flashcards.map((flashcard, index) => (
                 <Grid item xs={12} sm={6} md={4} key={index}>
-                  <Card>
-                    <CardContent>
-                      <Typography variant="h6">Front:</Typography>
-                      <Typography>{flashcard.front}</Typography>
-                      <Typography variant="h6" sx={{ mt: 2 }}>
-                        Back:
-                      </Typography>
-                      <Typography>{flashcard.back}</Typography>
+                  <Card
+                    sx={{
+                      perspective: "1000px",
+                      cursor: "pointer",
+                      width: "300px", 
+                      height: "200px", 
+                    }}
+                    onClick={() => handleFlip(index)}
+                  >
+                    <CardContent
+                      sx={{
+                        transformStyle: "preserve-3d",
+                        transition: "transform 0.6s",
+                        transform: flipped[index] ? "rotateY(180deg)" : "none",
+                        position: "relative",
+                        width: "100%",
+                        height: "100%",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          width: "100%",
+                          height: "100%",
+                          backfaceVisibility: "hidden",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: "white", 
+                          border: "1px solid #ddd", 
+                        }}
+                      >
+                       
+                        <Typography sx={{ textAlign: "center" }}>
+                          {flashcard.front}
+                        </Typography>
+                      </Box>
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          width: "100%",
+                          height: "100%",
+                          backfaceVisibility: "hidden",
+                          transform: "rotateY(180deg)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: "white", 
+                          border: "1px solid #ddd", 
+                        }}
+                      >
+              
+                        <Typography sx={{ textAlign: "center" }}>
+                          {flashcard.back}
+                        </Typography>
+                      </Box>
                     </CardContent>
                   </Card>
                 </Grid>
