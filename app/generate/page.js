@@ -15,10 +15,12 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  IconButton,
+  CircularProgress,
 } from "@mui/material";
-import MenuIcon from '@mui/icons-material/Menu';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
-import LogoutIcon from '@mui/icons-material/Logout';
+import MenuIcon from "@mui/icons-material/Menu";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
@@ -37,20 +39,24 @@ import { db } from "../firebase/config";
 
 export default function Generate() {
   const { isLoaded, isSignedIn, user } = useUser();
-
   const [flashcards, setFlashcards] = useState([]);
   const [flipped, setFlipped] = useState([]); // Array to track flipped states
   const [text, setText] = useState("");
   const [setName, setSetName] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [expanded, setExpanded] = useState(true); // Sidebar expand state
+  const [loading, setLoading] = useState(false); // Loading state
 
   const router = useRouter();
+  const { signOut } = useClerk();
 
   const handleSubmit = async () => {
     if (!text.trim()) {
       alert("Please enter some text to generate flashcards.");
       return;
     }
+
+    setLoading(true); // Start loading
 
     try {
       const response = await fetch("/api/generate", {
@@ -68,6 +74,8 @@ export default function Generate() {
     } catch (error) {
       console.error("Error generating flashcards:", error);
       alert("An error occurred while generating flashcards. Please try again.");
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -119,234 +127,305 @@ export default function Generate() {
     }
   };
 
-  const { signOut } = useClerk();
+  const toggleExpand = () => {
+    setExpanded(!expanded);
+  };
 
   return (
     <>
-      <Container maxWidth="md">
-
-        {flashcards.length > 0 && (
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h5" component="h2" gutterBottom>
-              Generated Flashcards
-            </Typography>
-            <Grid container spacing={2}>
-              {flashcards.map((flashcard, index) => (
-                <Grid item xs={12} sm={6} md={4} key={index}>
-                  <Card
-                    sx={{
-                      perspective: "1000px",
-                      cursor: "pointer",
-                      width: "300px", 
-                      height: "200px", 
-                    }}
-                    onClick={() => handleFlip(index)}
-                  >
-                    <CardContent
-                      sx={{
-                        transformStyle: "preserve-3d",
-                        transition: "transform 0.6s",
-                        transform: flipped[index] ? "rotateY(180deg)" : "none",
-                        position: "relative",
-                        width: "100%",
-                        height: "100%",
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          position: "absolute",
-                          width: "100%",
-                          height: "100%",
-                          backfaceVisibility: "hidden",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          backgroundColor: "white", 
-                          border: "1px solid #ddd", 
-                        }}
-                      >
-                       
-                        <Typography sx={{ textAlign: "center" }}>
-                          {flashcard.front}
-                        </Typography>
-                      </Box>
-                      <Box
-                        sx={{
-                          position: "absolute",
-                          width: "100%",
-                          height: "100%",
-                          backfaceVisibility: "hidden",
-                          transform: "rotateY(180deg)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          backgroundColor: "white", 
-                          border: "1px solid #ddd", 
-                        }}
-                      >
-              
-                        <Typography sx={{ textAlign: "center" }}>
-                          {flashcard.back}
-                        </Typography>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        )}
-        {flashcards.length > 0 && (
-          <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleOpenDialog}
-            >
-              Save your Flashcards
-            </Button>
-          </Box>
-        )}
-        <Dialog open={dialogOpen} onClose={handleCloseDialog}>
-          <DialogTitle>Save Flashcard Set</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              Please enter a name for your flashcard set.
-            </DialogContentText>
-            <TextField
-              autoFocus
-              margin="dense"
-              label="Set Name"
-              type="text"
-              fullWidth
-              value={setName}
-              onChange={(e) => setSetName(e.target.value)}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDialog}>Cancel</Button>
-            <Button onClick={saveFlashcards} color="primary">
-              Save
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Container>
-
-        <Box display={"flex"} width={"100vw"} height={"100vh"} backgroundColor={"#EEEEEE"}>
+      <Box
+        display={"flex"}
+        width={"100vw"}
+        height={"100vh"}
+        backgroundColor={"#EEEEEE"}
+      >
         {/* Side Nav Bar */}
-        <Box margin={2} display={"flex"} flexDirection={"column"} width={"250px"} borderRadius={2} backgroundColor={"white"} >
-          <Box padding={2} display={"flex"} flexDirection={"row"} justifyContent={"space-between"} alignContent={"center"} alignItems={"center"}>
-            <Typography variant="h6" fontWeight={"bold"}>Note AI</Typography>
-            <MenuIcon/>
+        <Box
+          margin={2}
+          display={"flex"}
+          flexDirection={"column"}
+          width={expanded ? "250px" : "80px"} // Adjusted width when collapsed
+          borderRadius={2}
+          backgroundColor={"white"}
+          height={"100vh"} // Ensures the sidebar takes up the full viewport height
+        >
+          <Box
+            padding={2}
+            display={"flex"}
+            flexDirection={"row"}
+            justifyContent={expanded ? "space-between" : "center"}
+            alignContent={"center"}
+            alignItems={"center"}
+          >
+            {expanded && (
+              <Typography variant="h6" fontWeight={"bold"}>
+                Note AI
+              </Typography>
+            )}
+            <IconButton onClick={toggleExpand}>
+              <MenuIcon />
+            </IconButton>
           </Box>
-          <Box padding={2} gap={1} display={"flex"} flexDirection={"column"} height={"500px"}>
-            <Typography variant="body2">Notes</Typography>
+
+          {/* Middle Content */}
+          <Box
+            padding={2}
+            gap={1}
+            display={"flex"}
+            flexDirection={"column"}
+            flexGrow={1} // Makes this box grow and take up the available space
+          >
+            {expanded && (
+              <Typography variant="body2">Notes</Typography>
+            )}
             {/* TODO -> Container for notes */}
-            <Box>           
-            </Box>
+            <Box></Box>
           </Box>
-          <Box padding={2} gap={1} display={"flex"} flexDirection={"column"}>  
-              <Box gap={2} display={"flex"} alignContent={"center"} alignItems={"center"}>
-                <Button variant="text"> <SettingsOutlinedIcon/> Settings </Button>            
-              </Box>
-              <Box gap={2} display={"flex"} alignContent={"center"} alignItems={"center"}>                
-                <Button variant="text" onClick={() => signOut({ redirectUrl: "/" })}> <LogoutIcon/> Sign Out</Button>
-              </Box>
+
+          {/* Bottom Buttons */}
+          <Box marginBottom="5px" padding={2} gap={1} display={"flex"} flexDirection={"column"}>
+            <Box
+              gap={2}
+              display={"flex"}
+              alignContent={"center"}
+              alignItems={"center"}
+            >
+              <SettingsOutlinedIcon />
+              {expanded && <Button variant="text">Settings</Button>}
+            </Box>
+            <Box
+              gap={2}
+              display={"flex"}
+              alignContent={"center"}
+              alignItems={"center"}
+            >
+              <LogoutIcon />
+              {expanded && (
+                <Button
+                  variant="text"
+                  onClick={() => signOut({ redirectUrl: "/" })}
+                >
+                  Sign Out
+                </Button>
+              )}
+            </Box>
           </Box>
         </Box>
 
         {/* Main Feature */}
-        <Box margin={2} borderRadius={2} display={"flex"} flexDirection={"column"} width={"100vw"}>
-          <Box display={"flex"} justifyContent={"space-between"} textAlign={"center"} padding={2}>
-            <Typography variant="h4" fontWeight={"bold"} > Review Notes </Typography>
+        <Box
+          margin={2}
+          borderRadius={2}
+          display={"flex"}
+          flexDirection={"column"}
+          width={"100vw"}
+        >
+          <Box
+            display={"flex"}
+            justifyContent={"space-between"}
+            textAlign={"center"}
+            padding={2}
+          >
+            <Typography variant="h4" fontWeight={"bold"}>
+              {" "}
+              Review Notes{" "}
+            </Typography>
             <UserButton showName={true} />
           </Box>
-          <Box margin={2} borderRadius={2} textAlign={"center"} backgroundColor={"white"} >
-          <TextField value={text} onChange={(e) => setText(e.target.value)} label="Enter text" fullWidth multiline rows={4} variant="outlined" sx={{ mb: 2 }}/>
-            <Button variant="contained" color="primary" onClick={handleSubmit}>
+          <Box
+            margin={2}
+            borderRadius={2}
+            textAlign={"center"}
+            backgroundColor={"white"}
+          >
+            <TextField
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              label="Enter text"
+              fullWidth
+              multiline
+              rows={4}
+              variant="outlined"
+              sx={{
+                mb: 2,
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: "transparent", // Removes the default grey border
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "transparent", // Removes the border when hovering
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "transparent", // Removes the border when focused
+                  },
+                },
+              }}
+            />
+
+            <Button
+              marginBottom="10px"
+              variant="contained"
+              color="primary"
+              onClick={handleSubmit}
+            >
               Generate Flashcards
             </Button>
           </Box>
-          {/* TESTING */}
-          {flashcards.length > 0 && (
-          <Box sx={{ mt: 4 }}>
-            <Grid container spacing={2}>
-              {flashcards.map((flashcard, index) => (
-                <Grid item xs={12} sm={6} md={4} key={index}>
-                  <Card
-                    sx={{
-                      perspective: "1000px",
-                      cursor: "pointer",
-                      width: "300px", 
-                      height: "200px", 
-                    }}
-                    onClick={() => handleFlip(index)}
-                  >
-                    <CardContent
-                      sx={{
-                        transformStyle: "preserve-3d",
-                        transition: "transform 0.6s",
-                        transform: flipped[index] ? "rotateY(180deg)" : "none",
-                        position: "relative",
-                        width: "100%",
-                        height: "100%",
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          position: "absolute",
-                          width: "100%",
-                          height: "100%",
-                          backfaceVisibility: "hidden",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          backgroundColor: "white", 
-                          border: "1px solid #ddd", 
-                        }}
-                      >
-                       
-                        <Typography sx={{ textAlign: "center" }}>
-                          {flashcard.front}
-                        </Typography>
-                      </Box>
-                      <Box
-                        sx={{
-                          position: "absolute",
-                          width: "100%",
-                          height: "100%",
-                          backfaceVisibility: "hidden",
-                          transform: "rotateY(180deg)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          backgroundColor: "white", 
-                          border: "1px solid #ddd", 
-                        }}
-                      >
-              
-                        <Typography sx={{ textAlign: "center" }}>
-                          {flashcard.back}
-                        </Typography>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        )}
-            
-              <Box display={"flex"} margin={2} height={"200px"} borderRadius={2} alignItems={"center"} justifyContent={"center"} backgroundColor="white">
-              <Typography variant="h4" fontWeight={"bold"}>  </Typography>
+
+          {/* Loading Indicator */}
+          {loading && (
+            <Box display="flex" justifyContent="center" alignItems="center" height="100px">
+              <CircularProgress />
+              <Typography variant="body1" sx={{ ml: 2 }}>
+                Generating Flashcards...
+              </Typography>
             </Box>
-            
-            
-                 
-          <Box display={"flex"} margin={2} borderRadius={2} justifyContent={"space-between"}>
-            <Button sx={{borderRadius:"2px", height:"40px"}} variant="contained"> Previous </Button>
+          )}
+
+          {/* Flashcards Display */}
+          <Container maxWidth="md">
+            {flashcards.length > 0 && !loading && (
+              <Box sx={{ mt: 4 }}>
+                <Typography variant="h5" component="h2" gutterBottom>
+                  Generated Flashcards
+                </Typography>
+                <Grid container spacing={2}>
+                  {flashcards.map((flashcard, index) => (
+                    <Grid item xs={12} sm={6} md={4} key={index}>
+                      <Card
+                        sx={{
+                          perspective: "1000px",
+                          cursor: "pointer",
+                          width: "300px",
+                          height: "200px",
+                        }}
+                        onClick={() => handleFlip(index)}
+                      >
+                        <CardContent
+                          sx={{
+                            transformStyle: "preserve-3d",
+                            transition: "transform 0.6s",
+                            transform: flipped[index]
+                              ? "rotateY(180deg)"
+                              : "none",
+                            position: "relative",
+                            width: "100%",
+                            height: "100%",
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              position: "absolute",
+                              width: "100%",
+                              height: "100%",
+                              backfaceVisibility: "hidden",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor: "white",
+                              border: "1px solid #ddd",
+                            }}
+                          >
+                            <Typography sx={{ textAlign: "center" }}>
+                              {flashcard.front}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              position: "absolute",
+                              width: "100%",
+                              height: "100%",
+                              backfaceVisibility: "hidden",
+                              transform: "rotateY(180deg)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor: "white",
+                              border: "1px solid #ddd",
+                            }}
+                          >
+                            <Typography sx={{ textAlign: "center" }}>
+                              {flashcard.back}
+                            </Typography>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+            )}
+            {flashcards.length > 0 && !loading && (
+              <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleOpenDialog}
+                >
+                  Save your Flashcards
+                </Button>
+              </Box>
+            )}
+            <Dialog open={dialogOpen} onClose={handleCloseDialog}>
+              <DialogTitle>Save Flashcard Set</DialogTitle>
+              <DialogContent>
+                <DialogContentText>
+                  Please enter a name for your flashcard set.
+                </DialogContentText>
+                <TextField
+                  autoFocus
+                  margin="dense"
+                  label="Set Name"
+                  type="text"
+                  fullWidth
+                  value={setName}
+                  onChange={(e) => setSetName(e.target.value)}
+                />
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleCloseDialog}>Cancel</Button>
+                <Button onClick={saveFlashcards} color="primary">
+                  Save
+                </Button>
+              </DialogActions>
+            </Dialog>
+          </Container>
+
+          <Box
+            display={"flex"}
+            margin={2}
+            height={"200px"}
+            borderRadius={2}
+            alignItems={"center"}
+            justifyContent={"center"}
+            backgroundColor="white"
+          >
+            <Typography variant="h4" fontWeight={"bold"}>
+              {" "}
+            </Typography>
+          </Box>
+
+          <Box
+            display={"flex"}
+            margin={2}
+            borderRadius={2}
+            justifyContent={"space-between"}
+          >
+            <Button
+              sx={{ borderRadius: "2px", height: "40px" }}
+              variant="contained"
+            >
+              {" "}
+              Previous{" "}
+            </Button>
             <Typography variant="body2"> 1 of 98 </Typography>
-            <Button sx={{borderRadius:"2px", height:"40px"}} variant="contained"> Next </Button>
+            <Button
+              sx={{ borderRadius: "2px", height: "40px" }}
+              variant="contained"
+            >
+              {" "}
+              Next{" "}
+            </Button>
           </Box>
         </Box>
       </Box>
