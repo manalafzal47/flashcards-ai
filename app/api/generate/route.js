@@ -35,7 +35,6 @@ export async function POST(req) {
   try {
     const data = await req.text();
 
-
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini", 
       messages: [systemPrompt, { role: "user", content: data }],
@@ -44,7 +43,8 @@ export async function POST(req) {
     const flashcards = JSON.parse(completion.choices[0].message.content);
 
     return NextResponse.json(flashcards.flashcards);
-  } catch (error) {
+  } 
+  catch (error) {
     console.error("Error generating flashcards:", error);
     return NextResponse.json(
       { error: "Failed to generate flashcards." },
@@ -52,4 +52,3 @@ export async function POST(req) {
     );
   }
 }
-
