@@ -7,9 +7,9 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Note AI",
+  title: "FlashAI",
   description: "customized flashcards using AI for instant revisions",
-};
+}
 
 export default function RootLayout({ children }) {
   return (

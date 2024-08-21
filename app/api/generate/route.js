@@ -43,7 +43,8 @@ export async function POST(req) {
     const flashcards = JSON.parse(completion.choices[0].message.content);
 
     return NextResponse.json(flashcards.flashcards);
-  } catch (error) {
+  } 
+  catch (error) {
     console.error("Error generating flashcards:", error);
     return NextResponse.json(
       { error: "Failed to generate flashcards." },

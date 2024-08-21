@@ -16,45 +16,18 @@ import SchoolIcon from "@mui/icons-material/School";
 import { useRouter } from "next/navigation";
 import { useClerk } from "@clerk/nextjs";
 import React from "react";
-// import Navbar from "./nav";
-import getStripe from "@/utils/get-stripe";
+import Navbar from "./nav";
 
 const Homepage = () => {
   const router = useRouter();
 
- const { user, session } = useClerk();
+  const handleAuthentication = () => {
+    router.push("/auth");
+  };
 
- const handleAuthentication = () => {
-   router.push("/auth");
- };
-
- const handleSubmit = async () => {
-   // Check if the user is authenticated
-   if (!session) {
-     // If not authenticated, redirect to the authentication page
-     handleAuthentication();
-     return;
-   }
-
-   // Proceed with Stripe checkout if authenticated
-   const checkoutSession = await fetch("/api/checkout_session", {
-     method: "POST",
-     headers: { origin: "http://localhost:3000/" },
-   });
-   const checkoutSessionJson = await checkoutSession.json();
-
-   const stripe = await getStripe();
-   const { error } = await stripe.redirectToCheckout({
-     sessionId: checkoutSessionJson.id,
-   });
-
-   if (error) {
-     console.warn(error.message);
-   }
- };
   return (
     <>
-      {/* <Navbar /> */}
+      <Navbar />
       {/* MAIN */}
       <Box
         sx={{
@@ -91,7 +64,7 @@ const Homepage = () => {
           experience smarter, faster learning.
         </Typography>
         <Button
-          href="/"
+          onClick={handleAuthentication}
           sx={{
             borderRadius: "4px",
             height: "45px",
@@ -399,7 +372,7 @@ const Homepage = () => {
               </CardContent>
               <Box sx={{ textAlign: "center", mt: 2 }}>
                 <Button
-                //   href="/stripe"
+                  href="/"
                   sx={{
                     borderRadius: "4px",
                     height: "45px",
@@ -409,7 +382,6 @@ const Homepage = () => {
                     "&:hover": { backgroundColor: "#e0e0e0" },
                   }}
                   variant="contained"
-                  onClick={handleSubmit}
                 >
                   Sign Up
                 </Button>
