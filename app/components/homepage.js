@@ -20,8 +20,9 @@ import Navbar from "./nav";
 
 const Homepage = () => {
   const router = useRouter();
-  const handleAuthentication = () =>{
-    router.push('/auth');
+
+  const handleAuthentication = () => {
+    router.push("/auth");
   };
 
   return (
