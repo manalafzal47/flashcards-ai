@@ -272,16 +272,6 @@ export default function Generate() {
             </Button>
           </Box>
 
-          {/* Loading Indicator */}
-          {loading && (
-            <Box display="flex" justifyContent="center" alignItems="center" height="100px">
-              <CircularProgress />
-              <Typography variant="body1" sx={{ ml: 2 }}>
-                Generating Flashcards...
-              </Typography>
-            </Box>
-          )}
-
           {/* Flashcards Display */}
           <Container maxWidth="md">
             {flashcards.length > 0 && !loading && (
@@ -320,8 +310,8 @@ export default function Generate() {
             </Dialog>
           </Container>
 
-           {/* Card Deck + Flip */}
-           <Box
+          {/* Card Deck + Flip */}
+          <Box
             display="flex"
             margin={2}
             height="200px"
@@ -362,11 +352,21 @@ export default function Generate() {
                   zIndex: 1,  // Ensure the front side is on top when not flipped
                 }}
               >
-                <Typography sx={{ textAlign: "center" }}>
-                  {flashcards.length > 0 && !loading
-                    ? flashcards[currentCardIndex].front
-                    : "Placeholder text before generating flashcards"}
-                </Typography>
+                {loading ? (
+                  // Loading Indicator
+                  <Box display="flex" justifyContent="center" alignItems="center" height="100px">
+                    <CircularProgress />
+                    <Typography variant="body1" sx={{ ml: 2 }}>
+                      Generating Flashcards...
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Typography sx={{ textAlign: "center" }}>
+                    {flashcards.length > 0
+                      ? flashcards[currentCardIndex].front
+                      : "No Flashcards Available"}
+                  </Typography>
+                )}
               </Box>
               <Box
                 sx={{
@@ -385,7 +385,7 @@ export default function Generate() {
                 <Typography sx={{ textAlign: "center" }}>
                   {flashcards.length > 0 && !loading
                     ? flashcards[currentCardIndex].back
-                    : "Placeholder text before generating flashcards"}
+                    : "No Flashcards Available"}
                 </Typography>
               </Box>
             </Box>
