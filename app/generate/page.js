@@ -19,7 +19,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import BoltOutlinedIcon from "@mui/icons-material/BoltOutlined";
 import LogoutIcon from "@mui/icons-material/Logout";
 
 import { useUser, useClerk } from "@clerk/nextjs";
@@ -48,7 +48,7 @@ export default function Generate() {
   const [expanded, setExpanded] = useState(true); // Sidebar expand state
   const [loading, setLoading] = useState(false); // Loading state
   const [currentCardIndex, setCurrentCardIndex] = useState(0); // Card Slider
-
+  const [modalOpen, setModalOpen] = useState(false); // Notification for free trial ended
 
   const router = useRouter();
   const { signOut } = useClerk();
@@ -84,6 +84,7 @@ export default function Generate() {
 
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
+  const handleCloseModal = () => setModalOpen(false);
 
   // Flip card on click
   const handleFlip = (index) => {
@@ -100,33 +101,54 @@ export default function Generate() {
     }
 
     try {
+      // Fetch current user's generation count
       const userDocRef = doc(collection(db, "users"), user.id);
       const userDocSnap = await getDoc(userDocRef);
-
-      const batch = writeBatch(db);
+      let generationCount = 0;
 
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data();
-        const updatedSets = [
-          ...(userData.flashcardSets || []),
-          { name: setName },
-        ];
-        batch.update(userDocRef, { flashcardSets: updatedSets });
-      } else {
-        batch.set(userDocRef, { flashcardSets: [{ name: setName }] });
+        generationCount = userData.flashcardGenerationCount || 0;
       }
 
-      const setDocRef = doc(collection(userDocRef, "flashcardSets"), setName);
-      batch.set(setDocRef, { flashcards });
+      if (generationCount >= 3) {
+        // // Prompt to go pro
+        // alert(
+        //   "Your free trial has ended. Please go pro to continue using this feature."
+        // );
+        // goPro();
+        // return;
+        // Open the modal if the generation count is 3 or more
+        setModalOpen(true);
+        setLoading(false);
+        return;
+      }
 
+      // Proceed with flashcard generation
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        body: text,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate flashcards");
+      }
+
+      const data = await response.json();
+      setFlashcards(data);
+      setFlipped(Array(data.length).fill(false)); // Initialize flipped states
+
+      // Update the generation count in Firebase
+      const batch = writeBatch(db);
+      batch.update(userDocRef, {
+        flashcardGenerationCount: generationCount + 1,
+      });
       await batch.commit();
-
-      alert("Flashcards saved successfully!");
-      handleCloseDialog();
-      setSetName("");
     } catch (error) {
-      console.error("Error saving flashcards:", error);
-      alert("An error occurred while saving flashcards. Please try again.");
+      console.error("Error generating flashcards:", error);
+      alert("An error occurred while generating flashcards. Please try again.");
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -209,23 +231,31 @@ export default function Generate() {
             flexDirection={"column"}
             flexGrow={1} // Makes this box grow and take up the available space
           >
-            {expanded && (
-              <Typography variant="body2">Notes</Typography>
-            )}
+            {expanded && <Typography variant="body2">Notes</Typography>}
             {/* TODO -> Container for notes */}
             <Box></Box>
           </Box>
 
           {/* Bottom Buttons */}
-          <Box marginBottom="5px" padding={2} gap={1} display={"flex"} flexDirection={"column"}>
+          <Box
+            marginBottom="5px"
+            padding={2}
+            gap={1}
+            display={"flex"}
+            flexDirection={"column"}
+          >
             <Box
               gap={2}
               display={"flex"}
               alignContent={"center"}
               alignItems={"center"}
             >
-              <SettingsOutlinedIcon />
-              {expanded && <Button variant="text" onClick={goPro}>Go Pro</Button>}
+              <BoltOutlinedIcon />
+              {expanded && (
+                <Button variant="text" onClick={goPro}>
+                  Go Pro
+                </Button>
+              )}
             </Box>
             <Box
               gap={2}
@@ -331,7 +361,9 @@ export default function Generate() {
                 height: "100%",
                 transformStyle: "preserve-3d",
                 transition: "transform 0.6s",
-                transform: flipped[currentCardIndex] ? "rotateY(180deg)" : "none",
+                transform: flipped[currentCardIndex]
+                  ? "rotateY(180deg)"
+                  : "none",
               }}
             >
               <Box
@@ -344,12 +376,17 @@ export default function Generate() {
                   alignItems: "center",
                   justifyContent: "center",
                   backgroundColor: "white",
-                  zIndex: 1,  // Ensure the front side is on top when not flipped
+                  zIndex: 1, // Ensure the front side is on top when not flipped
                 }}
               >
                 {loading ? (
                   // Loading Indicator
-                  <Box display="flex" justifyContent="center" alignItems="center" height="100px">
+                  <Box
+                    display="flex"
+                    justifyContent="center"
+                    alignItems="center"
+                    height="100px"
+                  >
                     <CircularProgress />
                     <Typography variant="body1" sx={{ ml: 2 }}>
                       Generating Flashcards...
@@ -374,7 +411,7 @@ export default function Generate() {
                   justifyContent: "center",
                   transform: "rotateY(180deg)",
                   backgroundColor: "white",
-                  zIndex: 0,  // Ensure the back side is underneath when not flipped
+                  zIndex: 0, // Ensure the back side is underneath when not flipped
                 }}
               >
                 <Typography sx={{ textAlign: "center" }}>
@@ -387,9 +424,11 @@ export default function Generate() {
           </Box>
 
           <Box textAlign={"center"}>
-              {flashcards.length > 0 ? `${currentCardIndex + 1} of ${flashcards.length}` : "0 of 0"}
+            {flashcards.length > 0
+              ? `${currentCardIndex + 1} of ${flashcards.length}`
+              : "0 of 0"}
           </Box>
-          
+
           <Box
             display={"flex"}
             margin={2}
@@ -446,6 +485,33 @@ export default function Generate() {
                 </DialogActions>
               </Dialog>
             </Container>
+            {/* Modal for Upgrade */}
+            <Dialog
+              open={modalOpen}
+              onClose={handleCloseModal}
+              aria-labelledby="upgrade-modal-title"
+              aria-describedby="upgrade-modal-description"
+            >
+              <DialogTitle id="upgrade-modal-title">Upgrade to Pro</DialogTitle>
+              <DialogContent>
+                <DialogContentText id="upgrade-modal-description">
+                  Your free trial has ended. Please go pro to continue using
+                  this feature.
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button
+                  onClick={() => {
+                    handleCloseModal();
+                    goPro();
+                  }}
+                  color="primary"
+                >
+                  Go Pro
+                </Button>
+                <Button onClick={handleCloseModal}>Go Back</Button>
+              </DialogActions>
+            </Dialog>
             <Button
               sx={{ borderRadius: "2px", height: "40px" }}
               variant="contained"
