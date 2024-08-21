@@ -160,7 +160,7 @@ export default function Generate() {
           >
             {expanded && (
               <Typography variant="h6" fontWeight={"bold"}>
-                Note AI
+                FlashAI
               </Typography>
             )}
             <IconButton onClick={toggleExpand}>
@@ -272,44 +272,6 @@ export default function Generate() {
             </Button>
           </Box>
 
-          {/* Flashcards Display */}
-          <Container maxWidth="md">
-            {flashcards.length > 0 && !loading && (
-              <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleOpenDialog}
-                >
-                  Save your Flashcards
-                </Button>
-              </Box>
-            )}
-            <Dialog open={dialogOpen} onClose={handleCloseDialog}>
-              <DialogTitle>Save Flashcard Set</DialogTitle>
-              <DialogContent>
-                <DialogContentText>
-                  Please enter a name for your flashcard set.
-                </DialogContentText>
-                <TextField
-                  autoFocus
-                  margin="dense"
-                  label="Set Name"
-                  type="text"
-                  fullWidth
-                  value={setName}
-                  onChange={(e) => setSetName(e.target.value)}
-                />
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={handleCloseDialog}>Cancel</Button>
-                <Button onClick={saveFlashcards} color="primary">
-                  Save
-                </Button>
-              </DialogActions>
-            </Dialog>
-          </Container>
-
           {/* Card Deck + Flip */}
           <Box
             display="flex"
@@ -410,7 +372,43 @@ export default function Generate() {
               {" "}
               Previous{" "}
             </Button>
-            <Typography variant="body2">  {flashcards.length > 0 ? `${currentCardIndex + 1} of ${flashcards.length}` : "0 of 0"} </Typography>
+            {/* Flashcards Display */}
+            <Container maxWidth="md">
+              {flashcards.length > 0 && !loading && (
+                <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleOpenDialog}
+                  >
+                    Save your Flashcards
+                  </Button>
+                </Box>
+              )}
+              <Dialog open={dialogOpen} onClose={handleCloseDialog}>
+                <DialogTitle>Save Flashcard Set</DialogTitle>
+                <DialogContent>
+                  <DialogContentText>
+                    Please enter a name for your flashcard set.
+                  </DialogContentText>
+                  <TextField
+                    autoFocus
+                    margin="dense"
+                    label="Set Name"
+                    type="text"
+                    fullWidth
+                    value={setName}
+                    onChange={(e) => setSetName(e.target.value)}
+                  />
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={handleCloseDialog}>Cancel</Button>
+                  <Button onClick={saveFlashcards} color="primary">
+                    Save
+                  </Button>
+                </DialogActions>
+              </Dialog>
+            </Container>
             <Button
               sx={{ borderRadius: "2px", height: "40px" }}
               variant="contained"
