@@ -22,11 +22,12 @@ import MenuIcon from "@mui/icons-material/Menu";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import LogoutIcon from "@mui/icons-material/Logout";
 
-import { useUser } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import getStripe from "@/utils/get-stripe";
 
 import { useAuth, UserButton } from "@clerk/clerk-react";
-import { useClerk } from "@clerk/nextjs";
+
 
 import {
   collection,
@@ -133,6 +134,37 @@ export default function Generate() {
     setExpanded(!expanded);
   };
 
+  const { session } = useClerk();
+
+  const handleAuthentication = () => {
+    router.push("/auth");
+  };
+
+  const goPro = async () => {
+    // Check if the user is authenticated
+    if (!session) {
+      // If not authenticated, redirect to the authentication page
+      handleAuthentication();
+      return;
+    }
+
+    // Proceed with Stripe checkout if authenticated
+    const checkoutSession = await fetch("/api/checkout_session", {
+      method: "POST",
+      headers: { origin: "http://localhost:3000/" },
+    });
+    const checkoutSessionJson = await checkoutSession.json();
+
+    const stripe = await getStripe();
+    const { error } = await stripe.redirectToCheckout({
+      sessionId: checkoutSessionJson.id,
+    });
+
+    if (error) {
+      console.warn(error.message);
+    }
+  };
+
   return (
     <>
       <Box
@@ -193,7 +225,7 @@ export default function Generate() {
               alignItems={"center"}
             >
               <SettingsOutlinedIcon />
-              {expanded && <Button variant="text">Settings</Button>}
+              {expanded && <Button variant="text" onClick={goPro}>Go Pro</Button>}
             </Box>
             <Box
               gap={2}
