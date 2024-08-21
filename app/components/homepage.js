@@ -64,7 +64,7 @@ const Homepage = () => {
           experience smarter, faster learning.
         </Typography>
         <Button
-          href="/"
+          onClick={handleAuthentication}
           sx={{
             borderRadius: "4px",
             height: "45px",

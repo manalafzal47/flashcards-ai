@@ -46,6 +46,8 @@ export default function Generate() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [expanded, setExpanded] = useState(true); // Sidebar expand state
   const [loading, setLoading] = useState(false); // Loading state
+  const [currentCardIndex, setCurrentCardIndex] = useState(0); // Card Slider
+
 
   const router = useRouter();
   const { signOut } = useClerk();
@@ -159,7 +161,7 @@ export default function Generate() {
           >
             {expanded && (
               <Typography variant="h6" fontWeight={"bold"}>
-                Note AI
+                FlashAI
               </Typography>
             )}
             <IconButton onClick={toggleExpand}>
@@ -261,7 +263,6 @@ export default function Generate() {
                 },
               }}
             />
-
             <Button
               marginBottom="10px"
               variant="contained"
@@ -272,139 +273,91 @@ export default function Generate() {
             </Button>
           </Box>
 
-          {/* Loading Indicator */}
-          {loading && (
-            <Box display="flex" justifyContent="center" alignItems="center" height="100px">
-              <CircularProgress />
-              <Typography variant="body1" sx={{ ml: 2 }}>
-                Generating Flashcards...
-              </Typography>
-            </Box>
-          )}
-
-          {/* Flashcards Display */}
-          <Container maxWidth="md">
-            {flashcards.length > 0 && !loading && (
-              <Box sx={{ mt: 4 }}>
-                <Typography variant="h5" component="h2" gutterBottom>
-                  Generated Flashcards
-                </Typography>
-                <Grid container spacing={2}>
-                  {flashcards.map((flashcard, index) => (
-                    <Grid item xs={12} sm={6} md={4} key={index}>
-                      <Card
-                        sx={{
-                          perspective: "1000px",
-                          cursor: "pointer",
-                          width: "300px",
-                          height: "200px",
-                        }}
-                        onClick={() => handleFlip(index)}
-                      >
-                        <CardContent
-                          sx={{
-                            transformStyle: "preserve-3d",
-                            transition: "transform 0.6s",
-                            transform: flipped[index]
-                              ? "rotateY(180deg)"
-                              : "none",
-                            position: "relative",
-                            width: "100%",
-                            height: "100%",
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              position: "absolute",
-                              width: "100%",
-                              height: "100%",
-                              backfaceVisibility: "hidden",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              backgroundColor: "white",
-                              border: "1px solid #ddd",
-                            }}
-                          >
-                            <Typography sx={{ textAlign: "center" }}>
-                              {flashcard.front}
-                            </Typography>
-                          </Box>
-                          <Box
-                            sx={{
-                              position: "absolute",
-                              width: "100%",
-                              height: "100%",
-                              backfaceVisibility: "hidden",
-                              transform: "rotateY(180deg)",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              backgroundColor: "white",
-                              border: "1px solid #ddd",
-                            }}
-                          >
-                            <Typography sx={{ textAlign: "center" }}>
-                              {flashcard.back}
-                            </Typography>
-                          </Box>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            )}
-            {flashcards.length > 0 && !loading && (
-              <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleOpenDialog}
-                >
-                  Save your Flashcards
-                </Button>
-              </Box>
-            )}
-            <Dialog open={dialogOpen} onClose={handleCloseDialog}>
-              <DialogTitle>Save Flashcard Set</DialogTitle>
-              <DialogContent>
-                <DialogContentText>
-                  Please enter a name for your flashcard set.
-                </DialogContentText>
-                <TextField
-                  autoFocus
-                  margin="dense"
-                  label="Set Name"
-                  type="text"
-                  fullWidth
-                  value={setName}
-                  onChange={(e) => setSetName(e.target.value)}
-                />
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={handleCloseDialog}>Cancel</Button>
-                <Button onClick={saveFlashcards} color="primary">
-                  Save
-                </Button>
-              </DialogActions>
-            </Dialog>
-          </Container>
-
+          {/* Card Deck + Flip */}
           <Box
-            display={"flex"}
+            display="flex"
             margin={2}
-            height={"200px"}
+            height="200px"
             borderRadius={2}
-            alignItems={"center"}
-            justifyContent={"center"}
+            alignItems="center"
+            justifyContent="center"
             backgroundColor="white"
+            onClick={() => {
+              if (flashcards.length > 0 && !loading) {
+                handleFlip(currentCardIndex);
+              }
+            }}
+            sx={{
+              perspective: "1000px",
+              cursor: flashcards.length > 0 && !loading ? "pointer" : "default",
+            }}
           >
-            <Typography variant="h4" fontWeight={"bold"}>
-              {" "}
-            </Typography>
+            <Box
+              sx={{
+                position: "relative",
+                width: "100%",
+                height: "100%",
+                transformStyle: "preserve-3d",
+                transition: "transform 0.6s",
+                transform: flipped[currentCardIndex] ? "rotateY(180deg)" : "none",
+              }}
+            >
+              <Box
+                sx={{
+                  position: "absolute",
+                  width: "100%",
+                  height: "100%",
+                  backfaceVisibility: "hidden",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "white",
+                  zIndex: 1,  // Ensure the front side is on top when not flipped
+                }}
+              >
+                {loading ? (
+                  // Loading Indicator
+                  <Box display="flex" justifyContent="center" alignItems="center" height="100px">
+                    <CircularProgress />
+                    <Typography variant="body1" sx={{ ml: 2 }}>
+                      Generating Flashcards...
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Typography sx={{ textAlign: "center" }}>
+                    {flashcards.length > 0
+                      ? flashcards[currentCardIndex].front
+                      : "No Flashcards Available"}
+                  </Typography>
+                )}
+              </Box>
+              <Box
+                sx={{
+                  position: "absolute",
+                  width: "100%",
+                  height: "100%",
+                  backfaceVisibility: "hidden",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transform: "rotateY(180deg)",
+                  backgroundColor: "white",
+                  zIndex: 0,  // Ensure the back side is underneath when not flipped
+                }}
+              >
+                <Typography sx={{ textAlign: "center" }}>
+                  {flashcards.length > 0 && !loading
+                    ? flashcards[currentCardIndex].back
+                    : "No Flashcards Available"}
+                </Typography>
+              </Box>
+            </Box>
           </Box>
 
+          <Box textAlign={"center"}>
+              {flashcards.length > 0 ? `${currentCardIndex + 1} of ${flashcards.length}` : "0 of 0"}
+          </Box>
+          
           <Box
             display={"flex"}
             margin={2}
@@ -414,14 +367,62 @@ export default function Generate() {
             <Button
               sx={{ borderRadius: "2px", height: "40px" }}
               variant="contained"
+              onClick={() =>
+                setCurrentCardIndex((prevIndex) =>
+                  prevIndex === 0 ? flashcards.length - 1 : prevIndex - 1
+                )
+              }
+              disabled={flashcards.length === 0}
             >
               {" "}
               Previous{" "}
             </Button>
-            <Typography variant="body2"> 1 of 98 </Typography>
+            {/* Flashcards Display */}
+            <Container maxWidth="md">
+              {flashcards.length > 0 && !loading && (
+                <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleOpenDialog}
+                  >
+                    Save your Flashcards
+                  </Button>
+                </Box>
+              )}
+              <Dialog open={dialogOpen} onClose={handleCloseDialog}>
+                <DialogTitle>Save Flashcard Set</DialogTitle>
+                <DialogContent>
+                  <DialogContentText>
+                    Please enter a name for your flashcard set.
+                  </DialogContentText>
+                  <TextField
+                    autoFocus
+                    margin="dense"
+                    label="Set Name"
+                    type="text"
+                    fullWidth
+                    value={setName}
+                    onChange={(e) => setSetName(e.target.value)}
+                  />
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={handleCloseDialog}>Cancel</Button>
+                  <Button onClick={saveFlashcards} color="primary">
+                    Save
+                  </Button>
+                </DialogActions>
+              </Dialog>
+            </Container>
             <Button
               sx={{ borderRadius: "2px", height: "40px" }}
               variant="contained"
+              onClick={() =>
+                setCurrentCardIndex((prevIndex) =>
+                  prevIndex === flashcards.length - 1 ? 0 : prevIndex + 1
+                )
+              }
+              disabled={flashcards.length === 0}
             >
               {" "}
               Next{" "}
