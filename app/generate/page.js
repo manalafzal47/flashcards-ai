@@ -353,6 +353,10 @@ export default function Generate() {
             </Box>
           </Box>
 
+          <Box textAlign={"center"}>
+              {flashcards.length > 0 ? `${currentCardIndex + 1} of ${flashcards.length}` : "0 of 0"}
+          </Box>
+
           <Box
             display={"flex"}
             margin={2}
