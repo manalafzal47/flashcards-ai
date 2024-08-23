@@ -112,13 +112,6 @@ export default function Generate() {
       }
 
       if (generationCount >= 3) {
-        // // Prompt to go pro
-        // alert(
-        //   "Your free trial has ended. Please go pro to continue using this feature."
-        // );
-        // goPro();
-        // return;
-        // Open the modal if the generation count is 3 or more
         setModalOpen(true);
         setLoading(false);
         return;
@@ -244,35 +237,38 @@ export default function Generate() {
             display={"flex"}
             flexDirection={"column"}
           >
-            <Box
-              gap={2}
-              display={"flex"}
-              alignContent={"center"}
-              alignItems={"center"}
+            <Button
+              variant="text"
+              onClick={goPro}
+              sx={{
+                display: "flex",
+                justifyContent: "flex-start",
+                alignItems: "center",
+                gap: 2,
+                padding: 0,
+                minWidth: 0,
+                color: "black",
+              }}
             >
               <BoltOutlinedIcon />
-              {expanded && (
-                <Button variant="text" onClick={goPro}>
-                  Go Pro
-                </Button>
-              )}
-            </Box>
-            <Box
-              gap={2}
-              display={"flex"}
-              alignContent={"center"}
-              alignItems={"center"}
+              {expanded && <Typography>Go Pro</Typography>}
+            </Button>
+            <Button
+              variant="text"
+              onClick={() => signOut({ redirectUrl: "/" })}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-start", 
+                gap: 2,
+                padding: 0,
+                minWidth: 0,
+                color: "black", 
+              }}
             >
               <LogoutIcon />
-              {expanded && (
-                <Button
-                  variant="text"
-                  onClick={() => signOut({ redirectUrl: "/" })}
-                >
-                  Sign Out
-                </Button>
-              )}
-            </Box>
+              {expanded && <Typography>Sign Out</Typography>}
+            </Button>
           </Box>
         </Box>
 
@@ -285,17 +281,27 @@ export default function Generate() {
           width={"100vw"}
         >
           <Box
-            display={"flex"}
-            justifyContent={"space-between"}
-            textAlign={"center"}
-            padding={2}
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              textAlign: "center",
+              padding: 2,
+              flexWrap: "wrap",
+            }}
           >
-            <Typography variant="h4" fontWeight={"bold"}>
-              {" "}
-              Review Notes{" "}
+            <Typography
+              variant="h4"
+              fontWeight={"bold"}
+              sx={{ fontSize: { xs: "1.5rem", sm: "2rem", md: "2.5rem" } }}
+            >
+              Review Notes
             </Typography>
-            <UserButton showName={true} />
+            <Box sx={{ mt: { xs: 2, sm: 0 } }}>
+              <UserButton showName={true} />
+            </Box>
           </Box>
+
           <Box
             margin={2}
             borderRadius={2}
